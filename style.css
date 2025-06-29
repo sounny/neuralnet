@@ -219,12 +219,13 @@ body {
 .neurons {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    align-items: center; /* Center neurons horizontally within the layer div */
+    gap: 8px; /* This is fine, but JS now uses a fixed margin for calculations */
 }
 
 .neuron {
-    width: 48px;
-    height: 48px;
+    width: 48px; /* JS uses 24px radius based on this */
+    height: 48px; /* JS uses 24px radius based on this */
     border-radius: 50%;
     border: 2px solid;
     display: flex;
@@ -235,6 +236,7 @@ body {
     color: white;
     cursor: pointer;
     transition: all 0.3s;
+    margin-bottom: 12px; /* JS uses this value for vertical spacing calculation */
 }
 
 .neuron.positive {
@@ -524,9 +526,14 @@ body {
     animation: neuronPulse 1s ease-in-out;
 }
 
+/* .connection-animate class is no longer used for signal flow,
+   replaced by JS-driven SVG animateMotion.
+   The keyframes connectionFlow can also be removed if not used elsewhere. */
+/*
 .connection-animate {
     animation: connectionFlow 2s ease-in-out;
 }
+*/
 
 @keyframes neuronPulse {
     0%, 100% {
@@ -539,6 +546,7 @@ body {
     }
 }
 
+/*
 @keyframes connectionFlow {
     0% {
         stroke-dasharray: 0 1000;
@@ -553,6 +561,7 @@ body {
         stroke-dashoffset: -100;
     }
 }
+*/
 
 /* Responsive Design */
 @media (max-width: 768px) {

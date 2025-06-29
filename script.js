@@ -325,135 +325,204 @@ class NeuralNetworkBuilder {
      * @param {boolean} animate - Whether to show animations
      */
     renderNetwork(animate = false) {
-        const container = document.getElementById('neuronsContainer');
+        const neuronsContainer = document.getElementById('neuronsContainer');
         const svg = document.getElementById('networkSvg');
         
         // Clear existing content
-        container.innerHTML = '';
+        neuronsContainer.innerHTML = '';
         svg.innerHTML = '';
-        
-        const layerPositions = this.layers.map((layer, index) => ({
-            x: index * 250 + 120, // Increased spacing
-            y: 250, // Centered vertically
-            neurons: layer.neurons
-        }));
-        
-        // Store neuron positions for proper connections
-        const neuronPositions = [];
-        this.layers.forEach((layer, layerIndex) => {
-            const position = layerPositions[layerIndex];
-            const layerNeurons = [];
-            
-            for (let neuronIndex = 0; neuronIndex < layer.neurons; neuronIndex++) {
-                const neuronY = position.y - (layer.neurons - 1) * 30 + neuronIndex * 60;
-                layerNeurons.push({
-                    x: position.x,
-                    y: neuronY,
-                    radius: 24
-                });
+
+        const neuronRadius = 24; // Defined from CSS .neuron width/height / 2
+        const neuronDiameter = neuronRadius * 2;
+        const verticalNeuronMargin = 12; // Defined from CSS .neuron style.marginBottom
+        const layerTitleHeight = 30; // Approximate height for layer title + margin
+        const layerWidth = 128; // Defined from CSS .layer-title width
+
+        const svgRect = svg.getBoundingClientRect();
+        const containerRect = neuronsContainer.getBoundingClientRect();
+
+        const layerXSpacing = (svgRect.width - layerWidth) / Math.max(1, this.layers.length -1);
+
+        const layerPositions = this.layers.map((layer, index) => {
+            // Distribute layers horizontally across the available SVG width
+            let x = layerWidth / 2; // Initial offset for the first layer
+            if (this.layers.length > 1) {
+                x = (index * layerXSpacing) + (layerWidth / 2);
             }
-            neuronPositions.push(layerNeurons);
+            // Ensure first layer is not too far left and last layer not too far right
+            x = Math.max(layerWidth/2 + neuronRadius, Math.min(x, svgRect.width - layerWidth/2 - neuronRadius));
+
+
+            return {
+                x: x,
+                // y: svgRect.height / 2, // Vertically center the layer block
+                y: containerRect.height / 2, // Vertically center the layer block in its container
+                neurons: layer.neurons,
+                name: layer.name
+            };
         });
         
-        // Render connection lines with proper positioning
-        this.layers.slice(0, -1).forEach((layer, layerIndex) => {
-            const fromNeurons = neuronPositions[layerIndex];
-            const toNeurons = neuronPositions[layerIndex + 1];
-            const layerWeights = this.weights[`${layerIndex}-${layerIndex + 1}`] || [];
-            
-            layerWeights.forEach((neuronWeights, fromNeuron) => {
-                neuronWeights.forEach((weight, toNeuron) => {
-                    if (fromNeurons[fromNeuron] && toNeurons[toNeuron]) {
-                        const fromPos = fromNeurons[fromNeuron];
-                        const toPos = toNeurons[toNeuron];
-                        
-                        // Calculate connection points on neuron edges
-                        const fromX = fromPos.x + fromPos.radius;
-                        const fromY = fromPos.y;
-                        const toX = toPos.x - toPos.radius;
-                        const toY = toPos.y;
-                        
-                        const weightMagnitude = Math.abs(weight);
-                        const isPositive = weight >= 0;
-                        
-                        // Connection line
-                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                        line.setAttribute('x1', fromX);
-                        line.setAttribute('y1', fromY);
-                        line.setAttribute('x2', toX);
-                        line.setAttribute('y2', toY);
-                        line.setAttribute('stroke', isPositive ? '#3b82f6' : '#ef4444');
-                        line.setAttribute('stroke-width', Math.max(1, weightMagnitude * 4));
-                        line.setAttribute('opacity', 0.4 + weightMagnitude * 0.6);
-                        line.setAttribute('stroke-linecap', 'round');
-                        
-                        if (animate) {
-                            line.classList.add('connection-animate');
-                        }
-                        
-                        svg.appendChild(line);
-                        
-                        // Weight label
-                        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                        text.setAttribute('x', (fromX + toX) / 2);
-                        text.setAttribute('y', (fromY + toY) / 2 - 8);
-                        text.setAttribute('text-anchor', 'middle');
-                        text.setAttribute('font-size', '11');
-                        text.setAttribute('font-weight', 'bold');
-                        text.setAttribute('fill', '#374151');
-                        text.setAttribute('stroke', 'white');
-                        text.setAttribute('stroke-width', '2');
-                        text.setAttribute('paint-order', 'stroke fill');
-                        text.textContent = weight.toFixed(2);
-                        svg.appendChild(text);
-                    }
-                });
-            });
-        });
-        
-        // Render neurons with improved positioning
+        const neuronGlobalPositions = []; // To store {x, y, layerIndex, neuronIndex} for each neuron globally
+
+        // Render neurons and store their global positions
         this.layers.forEach((layer, layerIndex) => {
-            const position = layerPositions[layerIndex];
+            const layerConfig = layerPositions[layerIndex];
+            const numNeurons = layer.neurons;
+            const totalLayerHeight = (numNeurons * neuronDiameter) + ((numNeurons - 1) * verticalNeuronMargin);
             
             const layerDiv = document.createElement('div');
             layerDiv.className = 'layer';
-            layerDiv.style.left = `${position.x - 60}px`; // Adjusted for larger neurons
-            layerDiv.style.top = `${position.y - (layer.neurons - 1) * 30 - 60}px`;
-            
+            // Position the layer div. Its top-left is (0,0) relative to neuronsContainer
+            // The neurons inside will be positioned relative to this layerDiv.
+            // The calculated x for layerConfig is the center of the layer.
+            // The calculated y for layerConfig is the center of the neurons block.
+            layerDiv.style.position = 'absolute';
+            layerDiv.style.left = `${layerConfig.x - layerWidth / 2}px`;
+            layerDiv.style.top = `${layerConfig.y - totalLayerHeight / 2 - layerTitleHeight}px`; // Adjust for title
+            layerDiv.style.width = `${layerWidth}px`; // Set fixed width for alignment
+
             const title = document.createElement('div');
             title.className = 'layer-title';
             title.textContent = layer.name;
             layerDiv.appendChild(title);
             
             const neuronsDiv = document.createElement('div');
-            neuronsDiv.className = 'neurons';
+            neuronsDiv.className = 'neurons'; // This will be a flex container centered by its parent
             
-            for (let neuronIndex = 0; neuronIndex < layer.neurons; neuronIndex++) {
+            const layerNeuronPositions = [];
+
+            for (let neuronIndex = 0; neuronIndex < numNeurons; neuronIndex++) {
                 const activation = this.activations[`${layerIndex}`]?.[neuronIndex] || 0;
                 const intensity = Math.abs(activation);
                 const isPositive = activation >= 0;
                 
                 const neuronDiv = document.createElement('div');
                 neuronDiv.className = `neuron ${isPositive ? 'positive' : 'negative'}`;
+                // Neuron styles (width, height, margin) are from CSS
                 neuronDiv.style.opacity = 0.4 + (intensity * 0.6);
                 neuronDiv.style.transform = `scale(${0.9 + intensity * 0.3})`;
                 neuronDiv.textContent = activation.toFixed(2);
                 neuronDiv.title = `Layer ${layerIndex}, Neuron ${neuronIndex}: ${activation.toFixed(4)}`;
-                neuronDiv.style.marginBottom = '12px'; // Increased spacing
                 
                 if (animate) {
-                    // Add animation delay based on layer and neuron index
+                    // Pulse input layer neurons early, subsequent layers after signal arrival time
+                    const pulseDelay = (layerIndex === 0 ? 0 : ((layerIndex - 1) * 300) + 750) + (neuronIndex * 100);
                     setTimeout(() => {
                         neuronDiv.classList.add('neuron-pulse');
-                        setTimeout(() => neuronDiv.classList.remove('neuron-pulse'), 1000);
-                    }, (layerIndex * 300) + (neuronIndex * 100));
+                        setTimeout(() => neuronDiv.classList.remove('neuron-pulse'), 1000); // Duration of pulse animation
+                    }, pulseDelay);
                 }
                 
                 neuronsDiv.appendChild(neuronDiv);
+
+                // Calculate global position for SVG lines
+                // The neuronDiv's position will be determined by flexbox within neuronsDiv
+                // We need to calculate its absolute position relative to the SVG canvas
+
+                // Position of layerDiv's top-left corner relative to neuronsContainer
+                const layerDivX = layerConfig.x - layerWidth / 2;
+                const layerDivY = layerConfig.y - totalLayerHeight / 2 - layerTitleHeight;
+
+                // Neuron's Y position within the layerDiv (relative to top of layerDiv)
+                // Title height + neuron's own top margin + previous neurons' height and margin + half of current neuron's height
+                const neuronYInLayer = layerTitleHeight + (neuronIndex * (neuronDiameter + verticalNeuronMargin)) + neuronRadius;
+
+                // Neuron's X position within the layerDiv (center of layerDiv)
+                const neuronXInLayer = layerWidth / 2;
+
+                const globalX = layerDivX + neuronXInLayer;
+                const globalY = layerDivY + neuronYInLayer;
+
+                layerNeuronPositions.push({ x: globalX, y: globalY, radius: neuronRadius });
             }
-            
+            neuronGlobalPositions.push(layerNeuronPositions);
             layerDiv.appendChild(neuronsDiv);
-            container.appendChild(layerDiv);
+            neuronsContainer.appendChild(layerDiv);
+        });
+
+        // Render connection lines using global neuron positions
+        this.layers.slice(0, -1).forEach((_, layerIndex) => {
+            const fromLayerNeurons = neuronGlobalPositions[layerIndex];
+            const toLayerNeurons = neuronGlobalPositions[layerIndex + 1];
+            const layerWeights = this.weights[`${layerIndex}-${layerIndex + 1}`] || [];
+
+            if (!fromLayerNeurons || !toLayerNeurons) return;
+
+            layerWeights.forEach((neuronWeights, fromNeuronIndex) => {
+                neuronWeights.forEach((weight, toNeuronIndex) => {
+                    const fromPos = fromLayerNeurons[fromNeuronIndex];
+                    const toPos = toLayerNeurons[toNeuronIndex];
+
+                    if (fromPos && toPos) {
+                        // Line connects center to center of neurons
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', fromPos.x.toString());
+                        line.setAttribute('y1', fromPos.y.toString());
+                        line.setAttribute('x2', toPos.x.toString());
+                        line.setAttribute('y2', toPos.y.toString());
+
+                        const weightMagnitude = Math.abs(weight);
+                        const isPositive = weight >= 0;
+                        line.setAttribute('stroke', isPositive ? '#3b82f6' : '#ef4444');
+                        line.setAttribute('stroke-width', Math.max(1, weightMagnitude * 4).toString());
+                        line.setAttribute('opacity', (0.4 + weightMagnitude * 0.6).toString());
+                        line.setAttribute('stroke-linecap', 'round');
+
+                        if (animate) {
+                            // Remove old class-based animation for the line itself
+                            // line.classList.add('connection-animate');
+
+                            // Add signal dot animation
+                            const fromActivation = this.activations[`${layerIndex}`]?.[fromNeuronIndex] || 0;
+                            if (Math.abs(fromActivation) > 0.01) { // Only animate if activation is significant
+                                const signalDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                                signalDot.setAttribute('r', (3 + Math.abs(fromActivation) * 4).toString()); // Size based on activation
+                                signalDot.setAttribute('fill', isPositive ? '#3b82f6' : '#ef4444'); // Color based on weight sign
+                                signalDot.style.opacity = (0.6 + Math.abs(fromActivation) * 0.4).toString();
+
+                                const motion = document.createElementNS('http://www.w3.org/2000/svg', 'animateMotion');
+                                motion.setAttribute('path', `M${fromPos.x},${fromPos.y} L${toPos.x},${toPos.y}`);
+                                motion.setAttribute('dur', '0.75s'); // Duration of travel
+                                motion.setAttribute('begin', `${(layerIndex * 0.3)}s`); // Stagger start based on layer
+                                motion.setAttribute('fill', 'freeze'); // Keep dot at end position
+                                motion.setAttribute('calcMode', 'spline');
+                                motion.setAttribute('keyTimes', '0;1');
+                                motion.setAttribute('keySplines', '0.4 0 0.2 1');
+
+
+                                signalDot.appendChild(motion);
+                                svg.appendChild(signalDot);
+
+                                // Optional: Fade out the dot after animation
+                                setTimeout(() => {
+                                   if (signalDot.parentNode) { // Check if still in DOM
+                                       signalDot.style.transition = 'opacity 0.5s';
+                                       signalDot.style.opacity = '0';
+                                       setTimeout(() => {
+                                           if (signalDot.parentNode) signalDot.remove();
+                                       }, 500);
+                                   }
+                                }, (layerIndex * 300) + 750 + 200); // Start fadeout after arrival + delay
+                            }
+                        }
+                        svg.appendChild(line);
+
+                        // Weight label
+                        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        text.setAttribute('x', ((fromPos.x + toPos.x) / 2).toString());
+                        text.setAttribute('y', ((fromPos.y + toPos.y) / 2 - 8).toString()); // Offset slightly above line
+                        text.setAttribute('text-anchor', 'middle');
+                        text.setAttribute('font-size', '11px');
+                        text.setAttribute('font-weight', 'bold');
+                        text.setAttribute('fill', '#374151');
+                        text.setAttribute('stroke', 'white');
+                        text.setAttribute('stroke-width', '2px');
+                        text.setAttribute('paint-order', 'stroke fill');
+                        text.textContent = weight.toFixed(2);
+                        svg.appendChild(text);
+                    }
+                });
+            });
         });
     }
     
