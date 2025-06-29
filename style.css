@@ -460,6 +460,32 @@ body {
     color: rgba(255, 255, 255, 0.9);
 }
 
+/* Learning Section */
+.learning-section {
+    margin-top: 32px;
+    padding: 24px;
+    background-color: #fefce8;
+    border: 1px solid #fcd34d;
+    border-radius: 8px;
+}
+
+.learning-section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #92400e;
+}
+
+.learning-section ul {
+    list-style: disc inside;
+    margin-left: 16px;
+}
+
+.learning-section li {
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
 /* Controls Section Styling */
 .controls-section {
     margin-bottom: 24px;
