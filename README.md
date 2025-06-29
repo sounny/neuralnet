@@ -1,6 +1,7 @@
 # Interactive Neural Network Builder
 
 A vanilla JavaScript implementation of an interactive neural network visualization tool. This project is designed as a hands‑on learning resource—build and experiment with neural networks, beginning with Martin's Image Recognition Machine (MIM).
+Check out a live preview of the website [here](https://sounny.github.io/neuralnet/).
 
 ## Features
 
