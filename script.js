@@ -44,6 +44,15 @@ class NeuralNetworkBuilder {
         // UI state
         this.activationFunction = 'sigmoid';
         this.showCalculations = false;
+
+        // Educational labels and descriptions
+        this.outputLabels = ['Diagonal \\', 'Diagonal /'];
+        this.activationDescriptions = {
+            sigmoid: 'Sigmoid squashes values between 0 and 1, useful for probabilities.',
+            relu: 'ReLU outputs zero for negatives and the input for positives.',
+            tanh: 'Tanh outputs values between -1 and 1, centered at zero.',
+            linear: 'Linear passes values through unchanged.'
+        };
         
         this.init();
     }
@@ -58,6 +67,7 @@ class NeuralNetworkBuilder {
         this.renderNetwork();
         this.renderWeightMatrices();
         this.renderResults();
+        this.updateActivationInfo();
         
         // Initialize Lucide icons
         if (typeof lucide !== 'undefined') {
@@ -90,6 +100,7 @@ class NeuralNetworkBuilder {
             this.renderNetwork();
             this.renderResults();
             this.renderMathematicalBreakdown();
+            this.updateActivationInfo();
         });
         
         // Pixel grid
@@ -532,34 +543,49 @@ class NeuralNetworkBuilder {
     renderResults() {
         const container = document.getElementById('outputResults');
         container.innerHTML = '';
-        
+
         const outputActivations = this.activations[`${this.layers.length - 1}`] || [];
-        
+
         outputActivations.forEach((output, index) => {
             const item = document.createElement('div');
             item.className = 'output-item';
-            
+
             const label = document.createElement('span');
             label.className = 'output-label';
-            label.textContent = `Output ${index}:`;
-            
+            label.textContent = `${this.outputLabels[index] || 'Output ' + index}:`;
+
             const bar = document.createElement('div');
             bar.className = 'output-bar';
-            
+
             const fill = document.createElement('div');
             fill.className = `output-fill ${output > 0 ? 'positive' : 'negative'}`;
             fill.style.width = `${Math.abs(output) * 100}%`;
-            
+
             const value = document.createElement('span');
             value.className = 'output-value';
             value.textContent = output.toFixed(3);
-            
+
             bar.appendChild(fill);
             item.appendChild(label);
             item.appendChild(bar);
             item.appendChild(value);
             container.appendChild(item);
         });
+
+        const predictionEl = document.getElementById('predictionText');
+        if (predictionEl) {
+            if (outputActivations.length) {
+                const maxVal = Math.max(...outputActivations);
+                const maxIndex = outputActivations.indexOf(maxVal);
+                if (maxVal >= 0.5) {
+                    predictionEl.textContent = `${this.outputLabels[maxIndex] || 'Pattern'} detected (confidence ${maxVal.toFixed(2)})`;
+                } else {
+                    predictionEl.textContent = 'No strong pattern detected';
+                }
+            } else {
+                predictionEl.textContent = '';
+            }
+        }
     }
     
     /**
@@ -678,6 +704,13 @@ class NeuralNetworkBuilder {
             
             container.appendChild(layerDiv);
         });
+    }
+
+    updateActivationInfo() {
+        const info = document.getElementById('activationInfo');
+        if (info) {
+            info.textContent = this.activationDescriptions[this.activationFunction] || '';
+        }
     }
 }
 
