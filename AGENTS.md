@@ -8,5 +8,5 @@ This repository contains a vanilla JavaScript interactive neural network visuali
 - Keep log entries concise and add them in reverse chronological order (newest at the top).
 
 ## Log
-
-- *Log entries go here.*
+ - 2025-08-12: Added activation function explanations and output prediction text to make the interface more instructional.
+ - *Log entries go here.*

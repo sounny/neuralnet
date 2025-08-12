@@ -266,6 +266,12 @@ body {
     margin-bottom: 12px;
 }
 
+.prediction-text {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
 .output-item {
     display: flex;
     align-items: center;
@@ -503,6 +509,12 @@ body {
     color: #6b7280;
     margin-bottom: 12px;
     font-size: 14px;
+}
+
+.activation-info {
+    font-size: 14px;
+    color: #6b7280;
+    margin-top: 8px;
 }
 
 .visualization-section {
