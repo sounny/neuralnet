@@ -53,7 +53,9 @@ class NeuralNetworkBuilder {
             tanh: 'Tanh outputs values between -1 and 1, centered at zero.',
             linear: 'Linear passes values through unchanged.'
         };
-        
+
+        this.isDarkMode = localStorage.getItem('theme') === 'dark';
+
         this.init();
     }
     
@@ -68,7 +70,8 @@ class NeuralNetworkBuilder {
         this.renderWeightMatrices();
         this.renderResults();
         this.updateActivationInfo();
-        
+        this.initTheme();
+
         // Initialize Lucide icons
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
@@ -92,7 +95,8 @@ class NeuralNetworkBuilder {
         document.getElementById('removeLayerBtn').addEventListener('click', () => this.removeHiddenLayer());
         document.getElementById('resetBtn').addEventListener('click', () => this.resetToMIM());
         document.getElementById('showMathBtn').addEventListener('click', () => this.toggleMath());
-        
+        document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
+
         // Activation function selector
         document.getElementById('activationSelect').addEventListener('change', (e) => {
             this.activationFunction = e.target.value;
@@ -710,6 +714,30 @@ class NeuralNetworkBuilder {
         const info = document.getElementById('activationInfo');
         if (info) {
             info.textContent = this.activationDescriptions[this.activationFunction] || '';
+        }
+    }
+
+    initTheme() {
+        document.body.classList.toggle('dark', this.isDarkMode);
+        this.updateThemeButton();
+    }
+
+    toggleTheme() {
+        this.isDarkMode = !this.isDarkMode;
+        document.body.classList.toggle('dark', this.isDarkMode);
+        localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light');
+        this.updateThemeButton();
+    }
+
+    updateThemeButton() {
+        const btn = document.getElementById('themeToggle');
+        if (btn) {
+            btn.innerHTML = this.isDarkMode
+                ? '<i data-lucide="sun"></i> Light Mode'
+                : '<i data-lucide="moon"></i> Dark Mode';
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
         }
     }
 }
