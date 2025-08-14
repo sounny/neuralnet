@@ -8,6 +8,7 @@ This repository contains a vanilla JavaScript interactive neural network visuali
 - Keep log entries concise and add them in reverse chronological order (newest at the top).
 
 ## Log
+ - 2025-08-14: Corrected network visualization so connection lines pass through neuron centers.
  - 2025-08-13: Added dark mode toggle with persistent theme settings to improve UI/UX.
  - 2025-08-12: Added activation function explanations and output prediction text to make the interface more instructional.
  - *Log entries go here.*

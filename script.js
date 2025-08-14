@@ -377,9 +377,7 @@ class NeuralNetworkBuilder {
             };
         });
         
-        const neuronGlobalPositions = []; // To store {x, y, layerIndex, neuronIndex} for each neuron globally
-
-        // Render neurons and store their global positions
+        // Render neurons for each layer
         this.layers.forEach((layer, layerIndex) => {
             const layerConfig = layerPositions[layerIndex];
             const numNeurons = layer.neurons;
@@ -404,8 +402,6 @@ class NeuralNetworkBuilder {
             const neuronsDiv = document.createElement('div');
             neuronsDiv.className = 'neurons'; // This will be a flex container centered by its parent
             
-            const layerNeuronPositions = [];
-
             for (let neuronIndex = 0; neuronIndex < numNeurons; neuronIndex++) {
                 const activation = this.activations[`${layerIndex}`]?.[neuronIndex] || 0;
                 const intensity = Math.abs(activation);
@@ -429,30 +425,25 @@ class NeuralNetworkBuilder {
                 }
                 
                 neuronsDiv.appendChild(neuronDiv);
-
-                // Calculate global position for SVG lines
-                // The neuronDiv's position will be determined by flexbox within neuronsDiv
-                // We need to calculate its absolute position relative to the SVG canvas
-
-                // Position of layerDiv's top-left corner relative to neuronsContainer
-                const layerDivX = layerConfig.x - layerWidth / 2;
-                const layerDivY = layerConfig.y - totalLayerHeight / 2 - layerTitleHeight;
-
-                // Neuron's Y position within the layerDiv (relative to top of layerDiv)
-                // Title height + neuron's own top margin + previous neurons' height and margin + half of current neuron's height
-                const neuronYInLayer = layerTitleHeight + (neuronIndex * (neuronDiameter + verticalNeuronMargin)) + neuronRadius;
-
-                // Neuron's X position within the layerDiv (center of layerDiv)
-                const neuronXInLayer = layerWidth / 2;
-
-                const globalX = layerDivX + neuronXInLayer;
-                const globalY = layerDivY + neuronYInLayer;
-
-                layerNeuronPositions.push({ x: globalX, y: globalY, radius: neuronRadius });
             }
-            neuronGlobalPositions.push(layerNeuronPositions);
             layerDiv.appendChild(neuronsDiv);
             neuronsContainer.appendChild(layerDiv);
+        });
+
+        // Calculate global positions for all neurons after rendering
+        const neuronGlobalPositions = [];
+        const updatedSvgRect = svg.getBoundingClientRect();
+        neuronsContainer.querySelectorAll('.layer').forEach((layerEl, layerIndex) => {
+            const neuronPositions = [];
+            layerEl.querySelectorAll('.neuron').forEach((neuronEl) => {
+                const rect = neuronEl.getBoundingClientRect();
+                neuronPositions.push({
+                    x: rect.left - updatedSvgRect.left + rect.width / 2,
+                    y: rect.top - updatedSvgRect.top + rect.height / 2,
+                    radius: rect.width / 2
+                });
+            });
+            neuronGlobalPositions[layerIndex] = neuronPositions;
         });
 
         // Render connection lines using global neuron positions
