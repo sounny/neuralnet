@@ -21,13 +21,13 @@
         <!-- Header Section -->
         <header class="header">
             <h1>Interactive Neural Network Builder</h1>
-            <p>Welcome to an interactive learning tool designed to demystify neural networks! A neural network is a computing system inspired by the biological brain, which learns to recognize patterns. Here, you can build, visualize, and experiment with a simple network, starting with a pre-built configuration called Martin's Image Recognition Machine (MIM).</p>
+            <p>Explore how a neural network learns. This site lets you build and watch a tiny network work. Start with Martin's Image Recognition Machine (MIM) and change it to see what happens.</p>
         </header>
 
         <!-- Controls -->
         <div class="controls-section">
             <h3>Network Controls</h3>
-            <p>Use these controls to modify the network's structure and behavior. Adding hidden layers increases its complexity, allowing it to learn more intricate patterns. Changing the activation function alters how neurons process information.</p>
+            <p>These buttons let you adjust the network. Add layers to give it more thinking steps, or change the activation function to see how the neurons react.</p>
             <div class="controls">
                 <button id="addLayerBtn" class="btn btn-blue">
                     <i data-lucide="plus"></i>
@@ -67,7 +67,7 @@
         <!-- Input Pattern Editor -->
         <div class="input-section">
             <h3>Input Pattern (4-pixel image)</h3>
-            <p>This is the data you feed into the network. Our simple network takes a 2x2 pixel image as input. Click the squares to toggle them between black (1) and white (0), or use the preset buttons to create common patterns.</p>
+            <p>The network reads a tiny 2x2 picture. Click a square to flip it on or off, or use a preset to load a pattern.</p>
             <div class="input-controls">
                 <div class="pixel-grid" id="pixelGrid">
                     <button class="pixel" data-index="0"></button>
@@ -91,7 +91,7 @@
         <!-- Network Visualization -->
         <div class="visualization-section">
             <h3>Live Network Visualization</h3>
-            <p>This diagram shows the network in action. Circles are <strong>neurons</strong>, and lines are <strong>connections</strong>. The brightness of a neuron indicates its <strong>activation level</strong> (how strongly it's firing). The color and thickness of a connection represent its <strong>weight</strong> (blue for positive, red for negative).</p>
+            <p>The picture below shows the network working. Circles are neurons and lines are connections. Bright circles mean high activation. Line color and thickness show the weight: blue for positive, red for negative.</p>
             <div class="network-container" id="networkContainer">
                 <svg id="networkSvg" class="network-svg"></svg>
                 <div id="neuronsContainer" class="neurons-container"></div>
@@ -101,7 +101,7 @@
         <!-- Results Section -->
         <div class="results-section">
             <h3>Network Output</h3>
-            <p>The output layer shows the network's final decision. For the default MIM configuration, the two outputs are trained to detect the two diagonal patterns. A value close to 1.0 indicates a strong detection of that pattern.</p>
+            <p>The output layer shows what the network thinks. In MIM, the two numbers tell how strongly each diagonal is detected. Values near 1 mean strong matches.</p>
             <div id="outputResults" class="output-results"></div>
             <p id="predictionText" class="prediction-text"></p>
             <div class="output-info">
@@ -113,14 +113,14 @@
         <!-- Weight Matrices -->
         <div class="weights-section">
             <h3>Weight Matrices</h3>
-            <p>Weights are the most critical part of a neural network; they are the values the network "learns." A weight determines the strength and sign of a connection between two neurons. Here, you can manually adjust them to see how they affect the output.</p>
+            <p>Weights are what the network learns. They set how strongly one neuron influences another. Change them to see how the output shifts.</p>
             <div id="weightMatrices" class="weight-matrices"></div>
         </div>
 
         <!-- Mathematical Explanation -->
         <div id="mathSection" class="math-section" style="display: none;">
             <h3>Mathematical Breakdown</h3>
-            <p>This section reveals the math behind the forward pass. For each neuron, it shows how the inputs from the previous layer are multiplied by their corresponding weights, summed up with a bias, and then passed through an activation function to produce an output.</p>
+            <p>Here you can follow each forward pass. Inputs are multiplied by weights, a bias is added, and an activation function creates the neuron's output.</p>
             <div id="mathContent" class="math-content"></div>
         </div>
 
@@ -128,42 +128,42 @@
         <div class="glossary-section">
             <h2>Glossary of Terms</h2>
             <div class="glossary-grid">
-                <div class="glossary-card">
+                <div class="glossary-card" id="glossary-neural-network">
                     <div class="glossary-term">Neural Network</div>
                     <div class="glossary-definition">A computational model inspired by the human brain, composed of interconnected nodes (neurons) that process information to recognize patterns and make decisions.</div>
                 </div>
 
-                <div class="glossary-card">
+                <div class="glossary-card" id="glossary-neuron">
                     <div class="glossary-term">Neuron</div>
                     <div class="glossary-definition">The basic unit of a neural network. It receives input, processes it, and produces an output value (its activation).</div>
                 </div>
 
-                <div class="glossary-card">
+                <div class="glossary-card" id="glossary-layers">
                     <div class="glossary-term">Layers</div>
                     <div class="glossary-definition">Neurons are organized into layers. The <strong>Input Layer</strong> receives the initial data. <strong>Hidden Layers</strong> perform intermediate computations. The <strong>Output Layer</strong> produces the final result.</div>
                 </div>
 
-                <div class="glossary-card">
+                <div class="glossary-card" id="glossary-weight">
                     <div class="glossary-term">Weight</div>
                     <div class="glossary-definition">A value that represents the strength of the connection between two neurons. Higher weights (positive or negative) mean the input from one neuron has a greater influence on the next.</div>
                 </div>
 
-                <div class="glossary-card">
+                <div class="glossary-card" id="glossary-bias">
                     <div class="glossary-term">Bias</div>
                     <div class="glossary-definition">A value added to the sum of weighted inputs before the activation function is applied. A bias allows a neuron to shift its activation function, making it more or less likely to fire.</div>
                 </div>
 
-                <div class="glossary-card">
+                <div class="glossary-card" id="glossary-activation-function">
                     <div class="glossary-term">Activation Function</div>
                     <div class="glossary-definition">A mathematical function that determines the output of a neuron based on its total input. It introduces non-linearity, allowing the network to learn complex patterns. Examples: Sigmoid, ReLU, Tanh.</div>
                 </div>
 
-                <div class="glossary-card">
+                <div class="glossary-card" id="glossary-forward-pass">
                     <div class="glossary-term">Forward Pass</div>
                     <div class="glossary-definition">The process of feeding input data through the network from the input layer to the output layer to generate a prediction.</div>
                 </div>
 
-                <div class="glossary-card">
+                <div class="glossary-card" id="glossary-mim">
                     <div class="glossary-term">MIM</div>
                     <div class="glossary-definition">Martin's Image Recognition Machine - a simple, hand-crafted neural network designed specifically to recognize diagonal lines in a 2x2 grid.</div>
                 </div>

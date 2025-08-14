@@ -733,8 +733,52 @@ class NeuralNetworkBuilder {
     }
 }
 
+// Link glossary keywords in page text
+// ---------------------------------------------------------------------------
+const glossaryLinks = {
+    'neural network': 'glossary-neural-network',
+    neuron: 'glossary-neuron',
+    layers: 'glossary-layers',
+    weight: 'glossary-weight',
+    bias: 'glossary-bias',
+    'activation function': 'glossary-activation-function',
+    'forward pass': 'glossary-forward-pass',
+    mim: 'glossary-mim'
+};
+
+const linkGlossaryTerms = () => {
+    const textNodes = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+        const parent = node.parentElement;
+        if (
+            parent &&
+            !parent.closest('.glossary-section') &&
+            !['SCRIPT', 'STYLE', 'A'].includes(parent.tagName)
+        ) {
+            textNodes.push(node);
+        }
+    }
+
+    textNodes.forEach((textNode) => {
+        let content = textNode.textContent;
+        Object.entries(glossaryLinks).forEach(([term, id]) => {
+            const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
+            content = content.replace(regex, (match) => `<a href="#${id}" class="keyword"><em><strong>${match}</strong></em></a>`);
+        });
+        if (content !== textNode.textContent) {
+            const span = document.createElement('span');
+            span.innerHTML = content;
+            textNode.parentElement.replaceChild(span, textNode);
+        }
+    });
+};
+
 // Initialize the neural network when the DOM is fully loaded
 // ---------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
     new NeuralNetworkBuilder();
+    linkGlossaryTerms();
 });
