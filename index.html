@@ -104,9 +104,54 @@
             <p>The output layer shows what the network thinks. In MIM, the two numbers tell how strongly each diagonal is detected. Values near 1 mean strong matches.</p>
             <div id="outputResults" class="output-results"></div>
             <p id="predictionText" class="prediction-text"></p>
+            <p id="reasoningText" class="reasoning-text"></p>
             <div class="output-info">
                 <p>In the original MIM: Output 0 = Diagonal &#92;, Output 1 = Diagonal /</p>
                 <p>Values closer to 1.0 indicate stronger detection</p>
+            </div>
+        </div>
+
+        <!-- Guided Learning Lab -->
+        <div class="teaching-section">
+            <h3>Guided Learning Lab</h3>
+            <p>Choose a challenge, make a prediction, and then compare your thinking with the network's output.</p>
+            <div class="teaching-controls">
+                <label for="lessonSelect">Challenge:</label>
+                <select id="lessonSelect" class="select">
+                    <option value="diagonal-backslash">Detect Diagonal \</option>
+                    <option value="diagonal-slash">Detect Diagonal /</option>
+                    <option value="confusing-pattern">Spot a Confusing Pattern</option>
+                    <option value="blank-vs-full">Compare Empty and Full</option>
+                </select>
+                <button id="applyLessonBtn" class="btn btn-blue">Load Challenge Pattern</button>
+            </div>
+            <div id="lessonPrompt" class="lesson-prompt"></div>
+
+            <div class="concept-check">
+                <h4>Quick Concept Check</h4>
+                <p>Before revealing feedback, answer these checks to strengthen your intuition.</p>
+                <div class="quiz-grid">
+                    <label>
+                        Which output should be strongest?
+                        <select id="quizBestOutput" class="select">
+                            <option value="">Choose one...</option>
+                            <option value="0">Output 0 (Diagonal \)</option>
+                            <option value="1">Output 1 (Diagonal /)</option>
+                            <option value="none">Neither should be strong</option>
+                        </select>
+                    </label>
+                    <label>
+                        The top-left pixel has what influence on Output 0?
+                        <select id="quizWeightSign" class="select">
+                            <option value="">Choose one...</option>
+                            <option value="positive">Positive influence</option>
+                            <option value="negative">Negative influence</option>
+                            <option value="none">No influence</option>
+                        </select>
+                    </label>
+                </div>
+                <button id="checkQuizBtn" class="btn btn-green">Check My Answers</button>
+                <div id="quizFeedback" class="quiz-feedback"></div>
             </div>
         </div>
 
