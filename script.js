@@ -54,6 +54,29 @@ class NeuralNetworkBuilder {
             linear: 'Linear passes values through unchanged.'
         };
 
+        this.lessonScenarios = {
+            'diagonal-backslash': {
+                pattern: [1, 0, 0, 1],
+                prompt: 'Prediction challenge: the pattern is a \\ diagonal. Which output should win, and why?',
+                expectedBestOutput: '0'
+            },
+            'diagonal-slash': {
+                pattern: [0, 1, 1, 0],
+                prompt: 'Prediction challenge: this is a / diagonal. Which neuron should activate most strongly?',
+                expectedBestOutput: '1'
+            },
+            'confusing-pattern': {
+                pattern: [0, 1, 1, 1],
+                prompt: 'Prediction challenge: this pattern is close to / but has extra pixels. Will the network stay confident?',
+                expectedBestOutput: '1'
+            },
+            'blank-vs-full': {
+                pattern: [0, 0, 0, 0],
+                prompt: 'Prediction challenge: no active pixels. Should either output fire strongly?',
+                expectedBestOutput: 'none'
+            }
+        };
+
         this.isDarkMode = localStorage.getItem('theme') === 'dark';
 
         this.init();
@@ -70,6 +93,7 @@ class NeuralNetworkBuilder {
         this.renderWeightMatrices();
         this.renderResults();
         this.updateActivationInfo();
+        this.initLessonLab();
         this.initTheme();
 
         // Initialize Lucide icons
@@ -96,6 +120,8 @@ class NeuralNetworkBuilder {
         document.getElementById('resetBtn').addEventListener('click', () => this.resetToMIM());
         document.getElementById('showMathBtn').addEventListener('click', () => this.toggleMath());
         document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
+        document.getElementById('applyLessonBtn').addEventListener('click', () => this.applySelectedLesson());
+        document.getElementById('checkQuizBtn').addEventListener('click', () => this.checkConceptQuiz());
 
         // Activation function selector
         document.getElementById('activationSelect').addEventListener('change', (e) => {
@@ -106,6 +132,8 @@ class NeuralNetworkBuilder {
             this.renderMathematicalBreakdown();
             this.updateActivationInfo();
         });
+
+        document.getElementById('lessonSelect').addEventListener('change', () => this.updateLessonPrompt());
         
         // Pixel grid
         document.getElementById('pixelGrid').addEventListener('click', (e) => {
@@ -568,6 +596,7 @@ class NeuralNetworkBuilder {
         });
 
         const predictionEl = document.getElementById('predictionText');
+        const reasoningEl = document.getElementById('reasoningText');
         if (predictionEl) {
             if (outputActivations.length) {
                 const maxVal = Math.max(...outputActivations);
@@ -580,6 +609,10 @@ class NeuralNetworkBuilder {
             } else {
                 predictionEl.textContent = '';
             }
+        }
+
+        if (reasoningEl) {
+            reasoningEl.textContent = this.buildReasoningText(outputActivations);
         }
     }
     
@@ -699,6 +732,81 @@ class NeuralNetworkBuilder {
             
             container.appendChild(layerDiv);
         });
+    }
+
+
+    initLessonLab() {
+        const lessonSelect = document.getElementById('lessonSelect');
+        if (!lessonSelect) return;
+        lessonSelect.value = 'diagonal-backslash';
+        this.updateLessonPrompt();
+    }
+
+    updateLessonPrompt() {
+        const lessonSelect = document.getElementById('lessonSelect');
+        const promptEl = document.getElementById('lessonPrompt');
+        if (!lessonSelect || !promptEl) return;
+
+        const scenario = this.lessonScenarios[lessonSelect.value];
+        promptEl.textContent = scenario ? scenario.prompt : '';
+    }
+
+    applySelectedLesson() {
+        const lessonSelect = document.getElementById('lessonSelect');
+        if (!lessonSelect) return;
+
+        const scenario = this.lessonScenarios[lessonSelect.value];
+        if (!scenario) return;
+
+        this.inputPattern = [...scenario.pattern];
+        this.updatePixelGrid();
+        this.calculateForwardPass(true);
+        this.renderResults();
+        this.renderMathematicalBreakdown();
+        this.updateLessonPrompt();
+    }
+
+    buildReasoningText(outputActivations) {
+        if (!outputActivations.length) return '';
+
+        const [backslashScore = 0, slashScore = 0] = outputActivations;
+        const strongerLabel = backslashScore >= slashScore ? 'Diagonal \\' : 'Diagonal /';
+        const difference = Math.abs(backslashScore - slashScore);
+
+        if (difference < 0.1) {
+            return 'Teaching note: both outputs are close, so this pattern is ambiguous for the current network settings.';
+        }
+
+        return `Teaching note: ${strongerLabel} is stronger by ${difference.toFixed(2)}, so those matching pixels and weights are dominating the decision.`;
+    }
+
+    checkConceptQuiz() {
+        const bestOutputAnswer = document.getElementById('quizBestOutput')?.value;
+        const weightSignAnswer = document.getElementById('quizWeightSign')?.value;
+        const feedbackEl = document.getElementById('quizFeedback');
+        const lessonSelect = document.getElementById('lessonSelect');
+
+        if (!feedbackEl || !lessonSelect) return;
+
+        const scenario = this.lessonScenarios[lessonSelect.value];
+        const correctBestOutput = scenario?.expectedBestOutput || 'none';
+        const correctWeightSign = 'positive';
+
+        const bestOutputCorrect = bestOutputAnswer === correctBestOutput;
+        const weightSignCorrect = weightSignAnswer === correctWeightSign;
+
+        const messages = [];
+        messages.push(bestOutputCorrect
+            ? '✅ Output prediction: correct.'
+            : `❌ Output prediction: try again. For this challenge, the best answer is ${correctBestOutput === 'none' ? 'neither output is strong' : `Output ${correctBestOutput}`}.`);
+
+        messages.push(weightSignCorrect
+            ? '✅ Weight sign: correct. In MIM, the top-left pixel supports Output 0 with a positive weight.'
+            : '❌ Weight sign: not yet. Check the first row of the weight matrix from Input to Output.');
+
+        const score = [bestOutputCorrect, weightSignCorrect].filter(Boolean).length;
+        feedbackEl.textContent = `${messages.join(' ')} Score: ${score}/2.`;
+        feedbackEl.classList.toggle('good', score === 2);
     }
 
     updateActivationInfo() {
