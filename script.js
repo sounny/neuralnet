@@ -44,6 +44,7 @@ class NeuralNetworkBuilder {
         // UI state
         this.activationFunction = 'sigmoid';
         this.showCalculations = false;
+        this.lastLessonResult = null;
 
         // Educational labels and descriptions
         this.outputLabels = ['Diagonal \\', 'Diagonal /'];
@@ -134,6 +135,11 @@ class NeuralNetworkBuilder {
         });
 
         document.getElementById('lessonSelect').addEventListener('change', () => this.updateLessonPrompt());
+
+        document.getElementById('confidenceRange')?.addEventListener('input', (e) => {
+            const valueEl = document.getElementById('confidenceValue');
+            if (valueEl) valueEl.textContent = `${e.target.value}%`;
+        });
         
         // Pixel grid
         document.getElementById('pixelGrid').addEventListener('click', (e) => {
@@ -614,6 +620,8 @@ class NeuralNetworkBuilder {
         if (reasoningEl) {
             reasoningEl.textContent = this.buildReasoningText(outputActivations);
         }
+
+        this.renderLearningCoach(outputActivations);
     }
     
     /**
@@ -780,9 +788,55 @@ class NeuralNetworkBuilder {
         return `Teaching note: ${strongerLabel} is stronger by ${difference.toFixed(2)}, so those matching pixels and weights are dominating the decision.`;
     }
 
+
+    renderLearningCoach(outputActivations) {
+        const coachEl = document.getElementById('learningCoach');
+        if (!coachEl) return;
+
+        if (!outputActivations.length) {
+            coachEl.textContent = '';
+            return;
+        }
+
+        const [backslashScore = 0, slashScore = 0] = outputActivations;
+        const winner = backslashScore >= slashScore ? '0' : '1';
+        const spread = Math.abs(backslashScore - slashScore);
+        const certainty = spread >= 0.35 ? 'high' : spread >= 0.15 ? 'medium' : 'low';
+
+        const certaintyText = {
+            high: 'The network is making a clear choice.',
+            medium: 'The network has a preference, but not by a huge margin.',
+            low: 'The network sees this as an ambiguous pattern.'
+        };
+
+        let lessonFeedback = '';
+        if (this.lastLessonResult) {
+            const confidenceDelta = Math.abs(this.lastLessonResult.confidence - this.lastLessonResult.networkConfidence);
+            const confidenceMessage = confidenceDelta <= 20
+                ? 'Nice calibration: your confidence matched the model fairly well.'
+                : 'Try calibrating your confidence next time by checking how separated the two outputs are.';
+
+            lessonFeedback = ` You predicted Output ${this.lastLessonResult.predictedOutput}, while the network favored Output ${winner}. ${confidenceMessage}`;
+        }
+
+        coachEl.textContent = `Learning Coach: Output ${winner} currently leads. ${certaintyText[certainty]} Compare both output values and explain what changed in the input to cause that gap.${lessonFeedback}`;
+    }
+
+    summarizePattern(pattern) {
+        const labels = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+        const active = pattern
+            .map((value, index) => value === 1 ? labels[index] : null)
+            .filter(Boolean);
+
+        if (!active.length) return 'no active pixels';
+        if (active.length === 4) return 'all pixels active';
+        return `${active.join(', ')} active`;
+    }
+
     checkConceptQuiz() {
         const bestOutputAnswer = document.getElementById('quizBestOutput')?.value;
         const weightSignAnswer = document.getElementById('quizWeightSign')?.value;
+        const confidenceValue = Number(document.getElementById('confidenceRange')?.value || 50);
         const feedbackEl = document.getElementById('quizFeedback');
         const lessonSelect = document.getElementById('lessonSelect');
 
@@ -791,6 +845,10 @@ class NeuralNetworkBuilder {
         const scenario = this.lessonScenarios[lessonSelect.value];
         const correctBestOutput = scenario?.expectedBestOutput || 'none';
         const correctWeightSign = 'positive';
+
+        const outputActivations = this.activations[`${this.layers.length - 1}`] || [];
+        const maxVal = outputActivations.length ? Math.max(...outputActivations) : 0;
+        const maxIndex = outputActivations.length ? outputActivations.indexOf(maxVal) : -1;
 
         const bestOutputCorrect = bestOutputAnswer === correctBestOutput;
         const weightSignCorrect = weightSignAnswer === correctWeightSign;
@@ -805,8 +863,21 @@ class NeuralNetworkBuilder {
             : '❌ Weight sign: not yet. Check the first row of the weight matrix from Input to Output.');
 
         const score = [bestOutputCorrect, weightSignCorrect].filter(Boolean).length;
+
+        this.lastLessonResult = {
+            predictedOutput: bestOutputAnswer || 'none',
+            confidence: confidenceValue,
+            networkConfidence: Math.round((maxVal || 0) * 100),
+            actualOutput: maxIndex >= 0 ? String(maxIndex) : 'none',
+            patternSummary: this.summarizePattern(this.inputPattern)
+        };
+
+        messages.push(`🧠 Confidence check: you reported ${confidenceValue}% confidence while the top output is ${(maxVal * 100).toFixed(0)}%.`);
+
         feedbackEl.textContent = `${messages.join(' ')} Score: ${score}/2.`;
         feedbackEl.classList.toggle('good', score === 2);
+
+        this.renderLearningCoach(outputActivations);
     }
 
     updateActivationInfo() {
