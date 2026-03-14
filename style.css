@@ -738,3 +738,37 @@ body.dark .quiz-feedback {
 body.dark .quiz-feedback.good {
     color: #6ee7b7;
 }
+
+
+.learning-coach {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-left: 4px solid #3b82f6;
+    background: #eff6ff;
+    color: #1e3a8a;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.confidence-label {
+    display: block;
+    margin: 12px 0 4px;
+    font-weight: 600;
+}
+
+#confidenceRange {
+    width: 100%;
+    margin-bottom: 6px;
+}
+
+.confidence-help {
+    font-size: 13px;
+    color: var(--muted-text-color);
+    margin-bottom: 10px;
+}
+
+body.dark .learning-coach {
+    background: #1e3a8a;
+    color: #dbeafe;
+    border-left-color: #60a5fa;
+}

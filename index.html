@@ -105,6 +105,7 @@
             <div id="outputResults" class="output-results"></div>
             <p id="predictionText" class="prediction-text"></p>
             <p id="reasoningText" class="reasoning-text"></p>
+            <div id="learningCoach" class="learning-coach"></div>
             <div class="output-info">
                 <p>In the original MIM: Output 0 = Diagonal &#92;, Output 1 = Diagonal /</p>
                 <p>Values closer to 1.0 indicate stronger detection</p>
@@ -130,6 +131,9 @@
             <div class="concept-check">
                 <h4>Quick Concept Check</h4>
                 <p>Before revealing feedback, answer these checks to strengthen your intuition.</p>
+                <label for="confidenceRange" class="confidence-label">How confident are you in your prediction? <span id="confidenceValue">50%</span></label>
+                <input type="range" id="confidenceRange" min="0" max="100" value="50" aria-describedby="confidenceHelp">
+                <p id="confidenceHelp" class="confidence-help">Being honest about confidence helps you build strong learning habits.</p>
                 <div class="quiz-grid">
                     <label>
                         Which output should be strongest?
